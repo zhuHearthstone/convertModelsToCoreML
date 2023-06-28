@@ -1,3 +1,4 @@
+import sys
 import argparse
 import subprocess
 import shutil
@@ -28,8 +29,12 @@ print("Add CN Unet:", cnUnet)
 # get file type
 fileNameArr = fileName.split('.')
 # the file name doesn't contain the '.'
-fileName = fileNameArr[0]
+fileName = ".".join(fileNameArr[:-1])
 fileType = fileNameArr[-1]
+print("fileName:", fileName)
+print("fileType:", fileType)
+
+
 if fileType == 'safetensors':
     fileType = 'safetensors'
 elif fileType == 'ckpt':
@@ -59,7 +64,7 @@ os.makedirs(f'{fileName}/split-einsum', exist_ok=True)
 zipConvertedFiles(convertedName, f'{fileName}/split-einsum')
 
 # # convert to original_512x512
-convertedName = f'{fileName}_original_512x512'
+convertedName = f'{fileName}_original'
 command = f'python -m python_coreml_stable_diffusion.torch2coreml --latent-w 64 --latent-h 64 --convert-vae-decoder --convert-vae-encoder --convert-text-encoder --compute-unit CPU_AND_GPU --convert-unet --model-version {fileName}_diffusers --bundle-resources-for-swift-cli --attention-implementation ORIGINAL -o {convertedName}'
 subprocess.run(command, shell=True)
 
@@ -113,3 +118,5 @@ todir = f'{fileName}/original/768x768'
 os.makedirs(todir, exist_ok=True)
 zipConvertedFiles(convertedName, todir)
 
+# delete diffuser folder
+shutil.rmtree(f'{fileName}_diffusers')
